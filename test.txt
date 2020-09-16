@@ -1,0 +1,1 @@
+{"SensorName":"TestSensor","GatewayName":"TestGateWay","ServerName":"TestServer","StorageName":"TestStorage","SensorType":"Binary","TangleLocation":"Testttt","AnnotationOwners":["apple","ibm","dell"],"Annotations":["policy","ownership","date"],"IOTAStreamId":"s7g37gd","ref":10,"Created":"2020-09-16T13:12:00.840438+02:00"}
