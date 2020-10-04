@@ -1,16 +1,15 @@
 package annotator
 
 import (
-	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"sim/go-simulator/collections"
+	"sim/go-simulator/configuration"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Annotation struct {
@@ -20,27 +19,7 @@ type Annotation struct {
 
 func (an Annotation) StoreAnnotation() {
 
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = client.Ping(context.TODO(), nil)
-	ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
-	collection := client.Database("alvarium").Collection("annotationsRaw")
-
-	fmt.Print("Annotation is:", an)
-
-	insertResult, err := collection.InsertOne(ctx, an)
+	insertResult, err := collections.InsertAnnotation("Policy", rand.Float64())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,58 +27,30 @@ func (an Annotation) StoreAnnotation() {
 }
 
 func (an Annotation) RetrieveAnnotation() {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.Connect(context.TODO(), clientOptions)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	result, err := collections.FindAnnotation("Ownership")
 
-	err = client.Ping(context.TODO(), nil)
-	ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Connected to MongoDB!")
-
-	collection := client.Database("alvarium").Collection("annotationsRaw")
-	var result Annotation
-
-	err = collection.FindOne(ctx, bson.D{}).Decode(&result)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Found a single document: %+v\n", result)
-
-	findOptions := options.Find()
-	findOptions.SetLimit(5)
+	fmt.Printf("Found a single document: %+v\n", result, err)
 
 	var token2 = setJWT(result)
-	fmt.Print(token2)
+	fmt.Print("\nThe JWT is:\n", token2)
 
 	tokenString := token2
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("techdev"), nil
+		return []byte(configuration.Config.Secret), nil
 	})
-	// ... error handling
-	fmt.Print(token)
-
-	// do something with decoded claims
+	fmt.Print("\nVerified would be\n:", token.Claims)
 	for key, val := range claims {
-		fmt.Printf("Key: %v, value: %v\n", key, val)
+		fmt.Printf("\nKey: %v, value: %v\n", key, val)
 	}
 
 }
 
-func setJWT(ann Annotation) string {
-	fmt.Print("Initial Output", ann)
+func setJWT(ann collections.Annotation) string {
 	var err error
 	//Creating Access Token
-	os.Setenv("ACCESS_SECRET", "techdev") //this should be in an env file
+	os.Setenv("ACCESS_SECRET", configuration.Config.Secret) //this should be in an env file
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
 	atClaims["annotation"] = ann
