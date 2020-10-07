@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sim/go-simulator/configuration"
+	"github.com/project-alvarium/go-simulator/configuration"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

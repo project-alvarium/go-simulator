@@ -6,13 +6,15 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"sim/go-simulator/api"
-	"sim/go-simulator/collections"
-	"sim/go-simulator/configuration"
-	"sim/go-simulator/simulator/annotator"
-	"sim/go-simulator/simulator/configfile"
-	"sim/go-simulator/simulator/sensor"
 	"time"
+
+	"github.com/project-alvarium/go-simulator/api"
+	"github.com/project-alvarium/go-simulator/collections"
+	"github.com/project-alvarium/go-simulator/configuration"
+	"github.com/project-alvarium/go-simulator/simulator/annotator"
+	"github.com/project-alvarium/go-simulator/simulator/configfile"
+	"github.com/project-alvarium/go-simulator/simulator/sensor"
+
 )
 
 func simulateSensor(frequency int64) {
