@@ -5,8 +5,8 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"sim/go-simulator/collections"
-	"sim/go-simulator/configuration"
+	"github.com/project-alvarium/go-simulator/collections"
+	"github.com/project-alvarium/go-simulator/configuration"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"

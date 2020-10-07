@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"sim/go-simulator/collections"
+	"github.com/project-alvarium/go-simulator/collections"
 	"time"
 )
 
