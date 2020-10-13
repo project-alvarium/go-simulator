@@ -1,5 +1,6 @@
 .DS_Store
 .idea/
+coverage.out
 go.sum
 
 #binary files

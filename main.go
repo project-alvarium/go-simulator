@@ -29,7 +29,7 @@ func simulateSensor(frequency int64) {
 }
 
 func main() {
-
+	fmt.Println("Starting go-simulator...")
 	httpRouter := api.NewRouter()
 	configuration.InitConfig()
 	srv := &http.Server{
