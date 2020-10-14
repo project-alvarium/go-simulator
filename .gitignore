@@ -1,6 +1,6 @@
 .DS_Store
- .idea/
- go.sum
+.idea/
+go.sum
 
- #binary files
- go-simulator
+#binary files
+go-simulator
