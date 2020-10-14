@@ -13,8 +13,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"sim/go-simulator/api/models"
-	"sim/go-simulator/handlers"
+
+	"github.com/project-alvarium/go-simulator/api/models"
+	"github.com/project-alvarium/go-simulator/handlers"
 
 	"github.com/gorilla/mux"
 )

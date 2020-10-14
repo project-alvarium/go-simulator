@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"sim/go-simulator/collections"
 	"time"
+
+	"github.com/project-alvarium/go-simulator/collections"
 )
 
 type Sensor struct {

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"sim/go-simulator/api/models"
-	"sim/go-simulator/collections"
+	"github.com/project-alvarium/go-simulator/api/models"
+	"github.com/project-alvarium/go-simulator/collections"
 )
 
 // InsightHandler is astuct to export the struct

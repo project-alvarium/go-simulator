@@ -8,6 +8,17 @@ import (
 	"time"
 )
 
+type Owner struct {
+	Name       string
+	PrivateKey string
+}
+
+type Annotation struct {
+	Name     string
+	NodePath string
+	Owner    Owner
+}
+
 type ConfigFile struct {
 	SensorName        string
 	GatewayName       string
@@ -15,8 +26,8 @@ type ConfigFile struct {
 	StorageName       string
 	SensorType        string
 	TangleLocation    string
-	AnnotationOwners  []string
-	Annotations       []string
+	AnnotationOwners  []Owner
+	Annotations       []Annotation
 	IOTAStreamID      string
 	EmissionFrequency int64 `json:"ef"`
 	// private string // An unexported field is not encoded.
@@ -49,8 +60,8 @@ func setRandomData() ConfigFile {
 	cf.StorageName = "TestStorage"
 	cf.SensorType = "Binary"
 	cf.TangleLocation = "Testttt"
-	cf.AnnotationOwners = []string{"apple", "ibm", "dell"}
-	cf.Annotations = []string{"policy", "ownership", "date"}
+	cf.AnnotationOwners = []Owner{Owner{Name: "IOTA", PrivateKey: "IOTAKey"}, {Name: "IBM", PrivateKey: "IBMKey"}, {Name: "Dell", PrivateKey: "DellKey"}}
+	cf.Annotations = []Annotation{Annotation{Name: "policy", NodePath: "policyNodePath", Owner: Owner{Name: "IOTA", PrivateKey: "IOTAKey"}}, Annotation{Name: "ownership", NodePath: "ownershipNodePath", Owner: Owner{Name: "Dell", PrivateKey: "DellKey"}}}
 	cf.IOTAStreamID = "s7g37gd"
 	cf.EmissionFrequency = 10
 	cf.Created = time.Now()

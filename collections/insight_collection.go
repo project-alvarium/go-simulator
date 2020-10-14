@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sim/go-simulator/configuration"
+
+	"github.com/project-alvarium/go-simulator/configuration"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

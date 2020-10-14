@@ -5,9 +5,10 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"sim/go-simulator/collections"
-	"sim/go-simulator/configuration"
 	"time"
+
+	"github.com/project-alvarium/go-simulator/collections"
+	"github.com/project-alvarium/go-simulator/configuration"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -52,8 +53,12 @@ func setJWT(ann collections.Annotation) string {
 	//Creating Access Token
 	os.Setenv("ACCESS_SECRET", configuration.Config.Secret) //this should be in an env file
 	atClaims := jwt.MapClaims{}
-	atClaims["authorized"] = true
-	atClaims["annotation"] = ann
+	atClaims["iss"] = "HostName"
+	atClaims["sub"] = "0123456789"
+	atClaims["iat"] = time.Now()
+	atClaims["jti"] = "0987654321"
+	atClaims["ann"] = ann.Name
+	atClaims["avl"] = ann.Score
 	atClaims["exp"] = time.Now().Add(time.Minute * 15).Unix()
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
