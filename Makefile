@@ -1,7 +1,7 @@
 .PHONY: build clean run test
 
 build:
-	GOCGO=CGO_ENABLED=1 go build -o go-simulator
+	CGO_ENABLED=1 go build -o go-simulator
 
 clean:
 	rm ./go-simulator
