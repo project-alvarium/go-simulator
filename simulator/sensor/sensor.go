@@ -12,24 +12,14 @@ import (
 type Sensor struct {
 }
 
-func (sn Sensor) Schedule(delay time.Duration) chan bool {
-	stop := make(chan bool)
-
-	go func() {
-		for {
-			StoreRawData()
-			select {
-			case <-time.After(delay):
-			case <-stop:
-				return
-			}
-		}
-	}()
-
-	return stop
+func (sn Sensor) Schedule(delay time.Duration) {
+	for {
+		storeRawData()
+		time.Sleep(delay * time.Second)
+	}
 }
 
-func StoreRawData() {
+func storeRawData() {
 	insertResult, err := collections.InsertRawData(rand.Int63())
 	if err != nil {
 		log.Fatal(err)
