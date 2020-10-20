@@ -16,17 +16,6 @@ import (
 	"github.com/project-alvarium/go-simulator/simulator/sensor"
 )
 
-func simulateSensor(frequency int64) {
-	sensor := sensor.Sensor{}
-
-	stop := sensor.Schedule(time.Duration(frequency) * time.Second)
-	time.Sleep(25 * time.Second)
-	stop <- true
-	time.Sleep(25 * time.Second)
-
-	fmt.Println("Done")
-}
-
 func main() {
 	fmt.Println("Starting go-simulator...")
 	httpRouter := api.NewRouter()
@@ -42,7 +31,8 @@ func main() {
 	cf := configfile.ConfigFile{}
 	cf.SetConfigurationFile()
 	cf = parseData()
-	simulateSensor(cf.EmissionFrequency)
+	sensor := sensor.Sensor{}
+	go sensor.Schedule(time.Duration(cf.EmissionFrequency))
 	annotation := annotator.Annotation{}
 	// annotation.StoreAnnotation()
 	annotation.RetrieveAnnotation()
