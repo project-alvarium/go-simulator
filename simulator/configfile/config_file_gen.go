@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/project-alvarium/go-simulator/libs"
 )
 
 type Owner struct {
@@ -20,6 +22,7 @@ type Annotation struct {
 }
 
 type ConfigFile struct {
+	SensorID          string
 	SensorName        string
 	GatewayName       string
 	ServerName        string
@@ -53,13 +56,16 @@ func (cf ConfigFile) SetConfigurationFile() {
 }
 
 func setRandomData() ConfigFile {
+	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
 	cf := ConfigFile{}
+	cf.SensorID = rl.StringWithCharset(8)
 	cf.SensorName = "TestSensor3"
 	cf.GatewayName = "TestGateWay"
 	cf.ServerName = "TestServer"
 	cf.StorageName = "TestStorage"
 	cf.SensorType = "Binary"
-	cf.TangleLocation = "Testttt"
+	cf.TangleLocation = "Test"
 	cf.AnnotationOwners = []Owner{Owner{Name: "IOTA", PrivateKey: "IOTAKey"}, {Name: "IBM", PrivateKey: "IBMKey"}, {Name: "Dell", PrivateKey: "DellKey"}}
 	cf.Annotations = []Annotation{Annotation{Name: "policy", NodePath: "policyNodePath", Owner: Owner{Name: "IOTA", PrivateKey: "IOTAKey"}}, Annotation{Name: "ownership", NodePath: "ownershipNodePath", Owner: Owner{Name: "Dell", PrivateKey: "DellKey"}}}
 	cf.IOTAStreamID = "s7g37gd"
