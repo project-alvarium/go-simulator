@@ -35,7 +35,7 @@ func main() {
 	go sensor.Schedule(time.Duration(cf.EmissionFrequency))
 	annotation := annotator.Annotation{}
 	// annotation.StoreAnnotation()
-	annotation.RetrieveAnnotation()
+	annotation.RetrieveAnnotation(cf.SensorID)
 
 	log.Fatal(srv.ListenAndServe())
 	log.Println("listening")
