@@ -1,5 +1,11 @@
 package main
 
+/*
+#cgo CFLAGS: -I./iota
+#cgo LDFLAGS: -L./iota -liota_streams_c
+#include <channels.h>
+*/
+import "C"
 import (
 	"encoding/json"
 	"fmt"
@@ -17,6 +23,10 @@ import (
 )
 
 func main() {
+	//VERY simple demonstration that the IOTA C bindings are included and callable
+	C.drop_str(C.CString("A"))
+	//After "make build" and "make run", you will see the statement below indicating the
+	//above call was made successfully even though it doesn't do anything.
 	fmt.Println("Starting go-simulator...")
 	httpRouter := api.NewRouter()
 	configuration.InitConfig()
