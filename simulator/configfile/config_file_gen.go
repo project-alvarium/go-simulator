@@ -3,7 +3,9 @@ package configfile
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/project-alvarium/go-simulator/configuration"
 	"log"
+	"math/rand"
 	"os"
 	"time"
 
@@ -21,6 +23,18 @@ type Annotation struct {
 	Owner    Owner
 }
 
+
+type NodeConfig struct {
+	Url string
+	Mwm int8
+}
+
+type SubConfig struct {
+	Seed 		string
+	Encoding	string
+	AnnAddress 	string
+}
+
 type ConfigFile struct {
 	SensorID          string
 	SensorName        string
@@ -33,6 +47,8 @@ type ConfigFile struct {
 	Annotations       []Annotation
 	IOTAStreamID      string
 	EmissionFrequency int64 `json:"ef"`
+	NodeConfig 		  NodeConfig
+	SubConfig         SubConfig
 	// private string // An unexported field is not encoded.
 	Created time.Time
 }
@@ -56,11 +72,10 @@ func (cf ConfigFile) SetConfigurationFile() {
 }
 
 func setRandomData() ConfigFile {
-	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+	rl := libs.RandLib{Charset: configuration.LetterBytes}
 	cf := ConfigFile{}
 	cf.SensorID = rl.StringWithCharset(8)
-	cf.SensorName = "TestSensor3"
+	cf.SensorName = rl.StringWithCharset(10)
 	cf.GatewayName = "TestGateWay"
 	cf.ServerName = "TestServer"
 	cf.StorageName = "TestStorage"
@@ -71,6 +86,8 @@ func setRandomData() ConfigFile {
 	cf.IOTAStreamID = "s7g37gd"
 	cf.EmissionFrequency = 10
 	cf.Created = time.Now()
+	cf.SubConfig = NewSubConfig(configuration.AnnAddress)
+	cf.NodeConfig = NewNodeConfig(configuration.NodeUrl, configuration.NodeMwm)
 
 	return cf
 
@@ -95,3 +112,22 @@ func writeToFile(s string) {
 		return
 	}
 }
+
+func NewNodeConfig(url string, mwm int8) NodeConfig {
+	return NodeConfig{ url, mwm }
+}
+
+func NewSubConfig(annAddress string) SubConfig {
+	bytes := make([]byte, 64)
+	rand.Seed(time.Now().UnixNano())
+	for i := range bytes {
+		bytes[i] = configuration.LetterBytes[rand.Intn(len(configuration.LetterBytes))]
+	}
+
+	seed := string(bytes)
+	fmt.Println("Seed: ", seed)
+	encoding := "utf-8"
+
+	return SubConfig{seed, encoding, annAddress }
+}
+
