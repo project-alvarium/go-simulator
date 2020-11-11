@@ -2,12 +2,12 @@ package annotator
 
 import (
 	"fmt"
+	"github.com/project-alvarium/go-simulator/iota"
+	"github.com/project-alvarium/go-simulator/libs"
 	"log"
 	"math/rand"
 	"os"
 	"time"
-
-	"github.com/project-alvarium/go-simulator/libs"
 
 	"github.com/project-alvarium/go-simulator/collections"
 	"github.com/project-alvarium/go-simulator/configuration"
@@ -15,27 +15,44 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-type Annotation struct {
-	Name  string
-	Score float64
+type Annotator struct {
+	sub 	*iota.Subscriber
 }
 
-func (an Annotation) StoreAnnotation() {
+func NewAnnotator(sub *iota.Subscriber) Annotator {
+	return Annotator{ sub }
+}
 
-	insertResult, err := collections.InsertAnnotation("Policy", rand.Float64())
+func (annotator Annotator) StoreAnnotation(sensorId string, readingId string) {
+	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+	iss, _ := os.Hostname()
+	iat := time.Now().String()
+	an := collections.Annotation{}
+	an.Iss = iss
+	an.Sub = sensorId
+	an.Iat = iat
+	an.Jti = rl.StringWithCharset(10)
+	an.Ann = "Policy"
+	an.Avl = rand.Float64()
+
+	annotationMessage := iota.NewAnnotation(readingId, an)
+	annotator.sub.SendMessage(annotationMessage)
+
+	insertResult, err := collections.InsertAnnotation(an)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Inserted a Single Document: ", insertResult)
 }
 
-func (an Annotation) RetrieveAnnotation(sensorId string) {
+func (annotator Annotator) RetrieveAnnotation() {
 
 	result, err := collections.FindAnnotation("Ownership")
 
 	fmt.Printf("Found a single document: %+v\n", result, err)
 
-	var token2 = setJWT(result, sensorId)
+	var token2 = setJWT(result)
 	fmt.Print("\nThe JWT is:\n", token2)
 
 	tokenString := token2
@@ -50,19 +67,17 @@ func (an Annotation) RetrieveAnnotation(sensorId string) {
 
 }
 
-func setJWT(ann collections.Annotation, sensorId string) string {
+func setJWT(ann collections.Annotation) string {
 	var err error
 	//Creating Access Token
 	os.Setenv("ACCESS_SECRET", configuration.Config.Secret) //this should be in an env file
-	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
 	atClaims := jwt.MapClaims{}
-	atClaims["iss"], err = os.Hostname()
-	atClaims["sub"] = sensorId
-	atClaims["iat"] = time.Now()
-	atClaims["jti"] = rl.StringWithCharset(10)
-	atClaims["ann"] = ann.Name
-	atClaims["avl"] = ann.Score
+	atClaims["iss"] = ann.Iss
+	atClaims["sub"] = ann.Sub
+	atClaims["iat"] = ann.Iat
+	atClaims["jti"] = ann.Jti
+	atClaims["ann"] = ann.Ann
+	atClaims["avl"] = ann.Avl
 	// atClaims["exp"] = time.Now().Add(time.Minute * 15).Unix()
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))

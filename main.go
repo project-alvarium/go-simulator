@@ -11,6 +11,8 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/project-alvarium/go-simulator/libs"
+	"github.com/project-alvarium/go-simulator/simulator/annotator"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -45,28 +47,42 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	for x:=0;x<10;x++ {
-		// Create a new configuration for subscriber/sensor
-		cf := configfile.ConfigFile{}
-		cf.SetConfigurationFile()
-		cf = parseData()
+	// Create a new configuration for subscriber/sensor
+	cf := configfile.ConfigFile{}
+	cf.SetConfigurationFile()
+	cf = parseData()
 
-		// Create a subscriber instance and await connection
-		subscriber := iota.NewSubscriber(cf.NodeConfig, cf.SubConfig)
-		subscriber.AwaitKeyload()
+	// Create a subscriber instance for annotator and await connection
+	sensorSubscriber := iota.NewSubscriber(cf.NodeConfig, cf.SubConfig)
+	sensorSubscriber.AwaitKeyload()
 
-		// Add subscriber to array for dropping on shutdown
-		subs = append(subs, subscriber)
+	// Add subscriber to array for dropping on shutdown
+	subs = append(subs, sensorSubscriber)
 
-		// Create a new sensor with subscriber embedded
-		new_sensor := sensor.NewSensor(&subscriber, cf)
-		go new_sensor.Schedule(time.Duration(cf.EmissionFrequency))
-	}
+	// Create a new configuration for annotator
+	cf2 := configfile.ConfigFile{}
+	cf2.SetConfigurationFile()
+	cf2 = parseData()
+
+	// Create a subscriber instance for annotator and await connection
+	annSubscriber := iota.NewSubscriber(cf2.NodeConfig, cf2.SubConfig)
+	annSubscriber.AwaitKeyload()
+
+	// Add subscriber to array for dropping on shutdown
+	subs = append(subs, annSubscriber)
+
+	// Create a new sensor with subscriber embedded
+	newSensor := sensor.NewSensor(&sensorSubscriber, cf)
+	// Create a new annotator with subscriber embedded
+	newAnnotator := annotator.NewAnnotator(&annSubscriber)
+	go newSensor.Schedule(time.Duration(cf.EmissionFrequency))
+
+	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" }
+	newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8))
+
 	//collections.Database()
-	//annotation := annotator.Annotation{}
-
-	//annotation.StoreAnnotation()
-	//annotation.RetrieveAnnotation(cf.SensorID)
+	//annotator.RetrieveAnnotation(cf.SensorID)
 
 	log.Fatal(srv.ListenAndServe())
 	log.Println("listening")

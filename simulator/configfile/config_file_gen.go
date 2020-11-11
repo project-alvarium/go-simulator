@@ -75,7 +75,7 @@ func setRandomData() ConfigFile {
 	rl := libs.RandLib{Charset: configuration.LetterBytes}
 	cf := ConfigFile{}
 	cf.SensorID = rl.StringWithCharset(8)
-	cf.SensorName = rl.StringWithCharset(10)
+	cf.SensorName = "TestSensor3"
 	cf.GatewayName = "TestGateWay"
 	cf.ServerName = "TestServer"
 	cf.StorageName = "TestStorage"
