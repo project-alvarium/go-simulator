@@ -11,16 +11,20 @@ import (
 )
 
 type Annotation struct {
-	Name  string  `json:"name" bson:"name"`
-	Score float64 `json:"score" bson:"score"`
+	Iss 	string  `json:"iss" bson:"iss"`
+	Sub 	string  `json:"sub" bson:"sub"`
+	Iat 	string  `json:"iat" bson:"iat"`
+	Jti		string  `json:"jti" bson:"jti"`
+	Ann 	string	`json:"ann" bson:"ann"`
+	Avl		float64 `json:"avl" bson:"avl"`
 }
 
 var annotationCollection string = "annotations"
 
 //InsertAnnotation : inserts new annotation
-func InsertAnnotation(name string, score float64) (string, error) {
+func InsertAnnotation(annotation Annotation) (string, error) {
 	var collection = DatabaseClient.Database(configuration.Config.DatabaseName).Collection(annotationCollection)
-	insertResult, err := collection.InsertOne(context.TODO(), Annotation{Name: name, Score: score})
+	insertResult, err := collection.InsertOne(context.TODO(), annotation)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
