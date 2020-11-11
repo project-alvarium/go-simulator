@@ -2,6 +2,7 @@
 .idea/
 coverage.out
 go.sum
+test.txt
 
 #binary files
 go-simulator
