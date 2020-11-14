@@ -3,8 +3,8 @@ package main
 /*
 #cgo CFLAGS: -I./iota/include -DIOTA_STREAMS_CHANNELS_CLIENT
 //Choose one of the 2 below for compilation. Use .so for linux and .dylib for mac
-#cgo LDFLAGS: ./iota/include/libiota_streams_c.so
-//#cgo LDFLAGS: -L./iota/include -liota_streams_c
+//#cgo LDFLAGS: ./iota/include/libiota_streams_c.so
+#cgo LDFLAGS: -L./iota/include -liota_streams_c
 #include <channels.h>
 */
 import "C"
@@ -78,7 +78,7 @@ func main() {
 	go newSensor.Schedule(time.Duration(cf.EmissionFrequency))
 
 	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" }
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
 	newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8))
 
 	//collections.Database()

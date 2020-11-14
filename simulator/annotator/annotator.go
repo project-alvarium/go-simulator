@@ -48,16 +48,16 @@ func (annotator Annotator) StoreAnnotation(sensorId string, readingId string) {
 
 func (annotator Annotator) RetrieveAnnotation() {
 
-	result, err := collections.FindAnnotation("Ownership")
+	result, _ := collections.FindAnnotation("Ownership")
 
-	fmt.Printf("Found a single document: %+v\n", result, err)
+	fmt.Printf("Found a single document: %+v\n", result)
 
 	var token2 = setJWT(result)
 	fmt.Print("\nThe JWT is:\n", token2)
 
 	tokenString := token2
 	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, _ := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(configuration.Config.Secret), nil
 	})
 	fmt.Print("\nVerified would be\n:", token.Claims)
