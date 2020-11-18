@@ -50,14 +50,13 @@ Finally, initializing the sensor loop and storing the outcome annotation.
 If running for the first time
 ```
 make build
-
 ```
 then
 ```
-make build
+make run
 ```
 
-After build you can use: 
+After building for the first time you can use: 
 ```
 go run main.go
 ```
