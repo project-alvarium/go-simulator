@@ -1,3 +1,4 @@
+![Project Alvarium](README.assets/ProjectAlvarium.png)
 # Simulator Example (Golang)
 
 In this readme you shall be able to run a basic simulator that stores random annotations, into our previously setup tangle
