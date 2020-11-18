@@ -46,8 +46,18 @@ Setting the iota stream to subscribe to the annotations stream
 ```
 Finally, initializing the sensor loop and storing the outcome annotation.
 
-## Run this command in the main directory:
+## Run the following commands in the main directory:
+If running for the first time
+```
+make build
 
+```
+then
+```
+make build
+```
+
+After build you can use: 
 ```
 go run main.go
 ```
