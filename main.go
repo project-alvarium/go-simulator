@@ -1,33 +1,41 @@
 package main
 
+/*
+#cgo CFLAGS: -I./iota/include -DIOTA_STREAMS_CHANNELS_CLIENT
+//Choose one of the 2 below for compilation. Use .so for linux and .dylib for mac
+//#cgo LDFLAGS: ./iota/include/libiota_streams_c.so
+#cgo LDFLAGS: -L./iota/include -liota_streams_c
+#include <channels.h>
+*/
+import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/project-alvarium/go-simulator/libs"
+	"github.com/project-alvarium/go-simulator/simulator/annotator"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/project-alvarium/go-simulator/api"
-	"github.com/project-alvarium/go-simulator/collections"
 	"github.com/project-alvarium/go-simulator/configuration"
-	"github.com/project-alvarium/go-simulator/simulator/annotator"
+	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"github.com/project-alvarium/go-simulator/simulator/sensor"
 )
 
-func simulateSensor(frequency int64) {
-	sensor := sensor.Sensor{}
-
-	stop := sensor.Schedule(time.Duration(frequency) * time.Second)
-	time.Sleep(25 * time.Second)
-	stop <- true
-	time.Sleep(25 * time.Second)
-
-	fmt.Println("Done")
-}
+var subs []iota.Subscriber
 
 func main() {
+	SetupShutdownHandler(&subs)
+	//VERY simple demonstration that the IOTA C bindings are included and callable
+	C.drop_str(C.CString("A"))
+	//After "make build" and "make run", you will see the statement below indicating the
+	//above call was made successfully even though it doesn't do anything.
 	fmt.Println("Starting go-simulator...")
 	httpRouter := api.NewRouter()
 	configuration.InitConfig()
@@ -38,14 +46,43 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	collections.Database()
+
+	// Create a new configuration for subscriber/sensor
 	cf := configfile.ConfigFile{}
 	cf.SetConfigurationFile()
 	cf = parseData()
-	simulateSensor(cf.EmissionFrequency)
-	annotation := annotator.Annotation{}
-	// annotation.StoreAnnotation()
-	annotation.RetrieveAnnotation()
+
+	// Create a subscriber instance for annotator and await connection
+	sensorSubscriber := iota.NewSubscriber(cf.NodeConfig, cf.SubConfig)
+	sensorSubscriber.AwaitKeyload()
+
+	// Add subscriber to array for dropping on shutdown
+	subs = append(subs, sensorSubscriber)
+
+	// Create a new configuration for annotator
+	cf2 := configfile.ConfigFile{}
+	cf2.SetConfigurationFile()
+	cf2 = parseData()
+
+	// Create a subscriber instance for annotator and await connection
+	annSubscriber := iota.NewSubscriber(cf2.NodeConfig, cf2.SubConfig)
+	annSubscriber.AwaitKeyload()
+
+	// Add subscriber to array for dropping on shutdown
+	subs = append(subs, annSubscriber)
+
+	// Create a new sensor with subscriber embedded
+	newSensor := sensor.NewSensor(&sensorSubscriber, cf)
+	// Create a new annotator with subscriber embedded
+	newAnnotator := annotator.NewAnnotator(&annSubscriber)
+	go newSensor.Schedule(time.Duration(cf.EmissionFrequency))
+
+	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+	newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8))
+
+	//collections.Database()
+	//annotator.RetrieveAnnotation(cf.SensorID)
 
 	log.Fatal(srv.ListenAndServe())
 	log.Println("listening")
@@ -69,4 +106,18 @@ func parseData() configfile.ConfigFile {
 	fmt.Print("Example for config file fields: \n The Sensor Name is: ", Data.GatewayName, "\n")
 	return Data
 
+}
+
+func SetupShutdownHandler(subs *[]iota.Subscriber) {
+	channel := make(chan os.Signal)
+	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-channel
+		fmt.Println("Shutdown called\nDropping Subscribers")
+		for _, sub := range *subs {
+			sub.Drop()
+		}
+		fmt.Println("Dropped\nExiting...")
+		os.Exit(0)
+	}()
 }
