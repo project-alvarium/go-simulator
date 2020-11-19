@@ -2,12 +2,13 @@ package annotator
 
 import (
 	"fmt"
-	"github.com/project-alvarium/go-simulator/iota"
-	"github.com/project-alvarium/go-simulator/libs"
 	"log"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/project-alvarium/go-simulator/iota"
+	"github.com/project-alvarium/go-simulator/libs"
 
 	"github.com/project-alvarium/go-simulator/collections"
 	"github.com/project-alvarium/go-simulator/configuration"
@@ -16,24 +17,24 @@ import (
 )
 
 type Annotator struct {
-	sub 	*iota.Subscriber
+	sub *iota.Subscriber
 }
 
 func NewAnnotator(sub *iota.Subscriber) Annotator {
-	return Annotator{ sub }
+	return Annotator{sub}
 }
 
-func (annotator Annotator) StoreAnnotation(sensorId string, readingId string) {
+func (annotator Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation, annotationName string) {
 	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
 	iss, _ := os.Hostname()
 	iat := time.Now().String()
-	an := collections.Annotation{}
+	an := annotation
 	an.Iss = iss
 	an.Sub = sensorId
 	an.Iat = iat
 	an.Jti = rl.StringWithCharset(10)
-	an.Ann = "Policy"
+	an.Ann = annotationName
 	an.Avl = rand.Float64()
 
 	annotationMessage := iota.NewAnnotation(readingId, an)
