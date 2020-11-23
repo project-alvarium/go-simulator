@@ -5,14 +5,16 @@ const LetterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // [Streams Configs]
 // Place announcement address here
-const AnnAddress = "caa066b039d1fd0fc35327aab4d8ed750f015ee3f88254044859d350595db68f0000000000000000:ace47289e46d12256ef9b368"
+const AnnAddress = "ARK9ZOGNCWEONTMOYRYYNLLG9JPGBSTFVCHSFIKQFS9XFYKQDMSFPTGXUGUSHLZ9VZXAOBFTCKHVJRAFW:2779530283277761"
+
 // URL for author console
 const AuthConsoleUrl = "http://127.0.0.1:8080"
+
 // URL for IOTA node
-const NodeUrl = "http://localhost:14265"
+const NodeUrl = "http://localhost:15601"
+
 // Min Weight Magnitude
 const NodeMwm = 9
-
 
 // Configuration holder
 type Configuration struct {
