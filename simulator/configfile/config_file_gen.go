@@ -3,6 +3,7 @@ package configfile
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/project-alvarium/go-simulator/collections"
 	"github.com/project-alvarium/go-simulator/configuration"
 	"log"
 	"math/rand"
@@ -43,7 +44,7 @@ type ConfigFile struct {
 	SensorType        string
 	TangleLocation    string
 	AnnotationOwners  []Owner
-	Annotations       []Annotation
+	Annotations       []collections.Annotation
 	IOTAStreamID      string
 	EmissionFrequency int64 `json:"ef"`
 	NodeConfig        NodeConfig
@@ -81,7 +82,7 @@ func setRandomData() ConfigFile {
 	cf.SensorType = "Binary"
 	cf.TangleLocation = "Test"
 	cf.AnnotationOwners = []Owner{Owner{Name: "IOTA", PrivateKey: "IOTAKey"}, {Name: "IBM", PrivateKey: "IBMKey"}, {Name: "Dell", PrivateKey: "DellKey"}}
-	cf.Annotations = []Annotation{Annotation{Name: "policy", NodePath: configuration.NodeUrl, Owner: Owner{Name: "IOTA", PrivateKey: "IOTAKey"}}, Annotation{Name: "ownership", NodePath: configuration.NodeUrl, Owner: Owner{Name: "Dell", PrivateKey: "DellKey"}}}
+	cf.Annotations = []collections.Annotation{{Ann: "policy"}, {Ann: "ownership"}}
 	cf.IOTAStreamID = "s7g37gd"
 	cf.EmissionFrequency = 10
 	cf.Created = time.Now()

@@ -81,7 +81,7 @@ func main() {
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
 
 	for i := 0; i < len(cf.Annotations); i++ {
-		newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8), cf.Annotations[i], cf.Annotations[i].Name)
+		newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8), cf.Annotations[i])
 	}
 
 	//collections.Database()

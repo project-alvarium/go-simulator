@@ -23,7 +23,7 @@ func NewAnnotator(sub *iota.Subscriber) Annotator {
 	return Annotator{sub}
 }
 
-func (annotator Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation, annotationName string) {
+func (annotator Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation) {
 	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
 	iss, _ := os.Hostname()
@@ -33,7 +33,6 @@ func (annotator Annotator) StoreAnnotation(sensorId string, readingId string, an
 	an.Sub = sensorId
 	an.Iat = iat
 	an.Jti = rl.StringWithCharset(10)
-	an.Ann = annotationName
 	an.Avl = rand.Float64()
 
 	annotationMessage := iota.NewAnnotation(readingId, an)
