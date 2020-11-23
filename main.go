@@ -11,8 +11,6 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/project-alvarium/go-simulator/libs"
-	"github.com/project-alvarium/go-simulator/simulator/annotator"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,6 +22,8 @@ import (
 	"github.com/project-alvarium/go-simulator/api"
 	"github.com/project-alvarium/go-simulator/configuration"
 	"github.com/project-alvarium/go-simulator/iota"
+	"github.com/project-alvarium/go-simulator/libs"
+	"github.com/project-alvarium/go-simulator/simulator/annotator"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"github.com/project-alvarium/go-simulator/simulator/sensor"
 )
