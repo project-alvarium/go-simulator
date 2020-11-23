@@ -11,8 +11,6 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/project-alvarium/go-simulator/libs"
-	"github.com/project-alvarium/go-simulator/simulator/annotator"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,6 +18,9 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/project-alvarium/go-simulator/libs"
+	"github.com/project-alvarium/go-simulator/simulator/annotator"
 
 	"github.com/project-alvarium/go-simulator/api"
 	"github.com/project-alvarium/go-simulator/configuration"
@@ -79,7 +80,10 @@ func main() {
 
 	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-	newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8))
+
+	for i := 0; i < len(cf.Annotations); i++ {
+		newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8), cf.Annotations[i], cf.Annotations[i].Name)
+	}
 
 	//collections.Database()
 	//annotator.RetrieveAnnotation(cf.SensorID)

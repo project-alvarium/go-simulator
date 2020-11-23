@@ -3,11 +3,12 @@ package configfile
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/project-alvarium/go-simulator/configuration"
 	"log"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/project-alvarium/go-simulator/configuration"
 
 	"github.com/project-alvarium/go-simulator/libs"
 )
@@ -23,16 +24,15 @@ type Annotation struct {
 	Owner    Owner
 }
 
-
 type NodeConfig struct {
 	Url string
 	Mwm int8
 }
 
 type SubConfig struct {
-	Seed 		string
-	Encoding	string
-	AnnAddress 	string
+	Seed       string
+	Encoding   string
+	AnnAddress string
 }
 
 type ConfigFile struct {
@@ -47,7 +47,7 @@ type ConfigFile struct {
 	Annotations       []Annotation
 	IOTAStreamID      string
 	EmissionFrequency int64 `json:"ef"`
-	NodeConfig 		  NodeConfig
+	NodeConfig        NodeConfig
 	SubConfig         SubConfig
 	// private string // An unexported field is not encoded.
 	Created time.Time
@@ -82,7 +82,7 @@ func setRandomData() ConfigFile {
 	cf.SensorType = "Binary"
 	cf.TangleLocation = "Test"
 	cf.AnnotationOwners = []Owner{Owner{Name: "IOTA", PrivateKey: "IOTAKey"}, {Name: "IBM", PrivateKey: "IBMKey"}, {Name: "Dell", PrivateKey: "DellKey"}}
-	cf.Annotations = []Annotation{Annotation{Name: "policy", NodePath: "policyNodePath", Owner: Owner{Name: "IOTA", PrivateKey: "IOTAKey"}}, Annotation{Name: "ownership", NodePath: "ownershipNodePath", Owner: Owner{Name: "Dell", PrivateKey: "DellKey"}}}
+	cf.Annotations = []Annotation{Annotation{Name: "policy", NodePath: configuration.NodeUrl, Owner: Owner{Name: "IOTA", PrivateKey: "IOTAKey"}}, Annotation{Name: "ownership", NodePath: configuration.NodeUrl, Owner: Owner{Name: "Dell", PrivateKey: "DellKey"}}}
 	cf.IOTAStreamID = "s7g37gd"
 	cf.EmissionFrequency = 10
 	cf.Created = time.Now()
@@ -114,7 +114,7 @@ func writeToFile(s string) {
 }
 
 func NewNodeConfig(url string, mwm int8) NodeConfig {
-	return NodeConfig{ url, mwm }
+	return NodeConfig{url, mwm}
 }
 
 func NewSubConfig(annAddress string) SubConfig {
@@ -128,6 +128,5 @@ func NewSubConfig(annAddress string) SubConfig {
 	fmt.Println("Seed: ", seed)
 	encoding := "utf-8"
 
-	return SubConfig{seed, encoding, annAddress }
+	return SubConfig{seed, encoding, annAddress}
 }
-
