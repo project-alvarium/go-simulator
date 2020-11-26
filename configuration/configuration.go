@@ -1,7 +1,7 @@
 package configuration
 
 // For randomizer
-const LetterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const LetterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // [Streams Configs]
 // Place announcement address here
@@ -15,6 +15,9 @@ const NodeUrl = "http://localhost:15601"
 
 // Min Weight Magnitude
 const NodeMwm = 9
+
+// Max number of readings to conduct
+const MaxReadings = 100
 
 // Configuration holder
 type Configuration struct {
@@ -33,7 +36,7 @@ func InitConfig() {
 	Config = Configuration{
 		DatabaseName: "alvarium-db",
 		DatabaseURL:  "mongodb://localhost:27017",
-		HTTPPort:     "9090",
+		HTTPPort:     "9091",
 		Secret:       "techdev",
 	}
 }

@@ -19,12 +19,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/project-alvarium/go-simulator/libs"
-	"github.com/project-alvarium/go-simulator/simulator/annotator"
-
 	"github.com/project-alvarium/go-simulator/api"
 	"github.com/project-alvarium/go-simulator/configuration"
 	"github.com/project-alvarium/go-simulator/iota"
+	"github.com/project-alvarium/go-simulator/libs"
+	"github.com/project-alvarium/go-simulator/simulator/annotator"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"github.com/project-alvarium/go-simulator/simulator/sensor"
 )
@@ -72,18 +71,21 @@ func main() {
 	// Add subscriber to array for dropping on shutdown
 	subs = append(subs, annSubscriber)
 
-	// Create a new sensor with subscriber embedded
-	newSensor := sensor.NewSensor(&sensorSubscriber, cf)
-	// Create a new annotator with subscriber embedded
-	newAnnotator := annotator.NewAnnotator(&annSubscriber)
-	go newSensor.Schedule(time.Duration(cf.EmissionFrequency))
-
-	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-
-	for i := 0; i < len(cf.Annotations); i++ {
-		newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8), cf.Annotations[i], cf.Annotations[i].Name)
+	// Prepare reading Id's in advance
+	rl := libs.RandLib{Charset: configuration.LetterBytes}
+	var readingIds []string
+	for x := 0 ; x < configuration.MaxReadings ; x ++ {
+		readingIds = append(readingIds, rl.StringWithCharset(10))
 	}
+
+	// Create a new sensor with subscriber embedded
+	newSensor := sensor.NewSensor(&sensorSubscriber, cf, readingIds)
+	// Create a new annotator with subscriber embedded
+	newAnnotator := annotator.NewAnnotator(&annSubscriber, cf, readingIds)
+
+	// Schedule emissions
+	go newSensor.Schedule(time.Duration(cf.EmissionFrequency))
+	go newAnnotator.Schedule(time.Duration(cf.EmissionFrequency))
 
 	//collections.Database()
 	//annotator.RetrieveAnnotation(cf.SensorID)
