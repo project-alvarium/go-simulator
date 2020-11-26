@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/libs"
+	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"log"
 	"math/rand"
 	"os"
@@ -17,15 +18,26 @@ import (
 
 type Annotator struct {
 	sub *iota.Subscriber
+	config configfile.ConfigFile
+	count int
+	ids []string
 }
 
-func NewAnnotator(sub *iota.Subscriber) Annotator {
-	return Annotator{sub}
+func NewAnnotator(sub *iota.Subscriber, config configfile.ConfigFile, ids []string) Annotator {
+	return Annotator{sub, config, 0, ids }
 }
 
-func (annotator Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation) {
-	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+func (annotator *Annotator) Schedule(delay time.Duration) {
+	for i := 0; i < len(annotator.ids); i++ {
+		cf := &annotator.config
+		annotator.StoreAnnotation(cf.SensorName, annotator.ids[annotator.count], cf.Annotations[0])
+		annotator.StoreAnnotation(cf.SensorName, annotator.ids[annotator.count], cf.Annotations[1])
+		annotator.count += 1
+		time.Sleep(delay * time.Second)
+	}
+}
+func (annotator *Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation) {
+	rl := libs.RandLib{Charset: configuration.LetterBytes}
 	iss, _ := os.Hostname()
 	iat := time.Now().UnixNano() / int64(time.Millisecond)
 	an := annotation

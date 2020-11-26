@@ -6,7 +6,6 @@ import (
 	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"log"
-
 	"math/rand"
 	"strconv"
 	"time"
@@ -16,14 +15,15 @@ type Sensor struct {
 	subscriber *iota.Subscriber
 	config configfile.ConfigFile
 	count int
+	ids []string
 }
 
-func NewSensor(subscriber *iota.Subscriber, cf configfile.ConfigFile) Sensor {
-	return Sensor{ subscriber, cf, 0 }
+func NewSensor(subscriber *iota.Subscriber, cf configfile.ConfigFile, ids []string) Sensor {
+	return Sensor{ subscriber, cf, 0, ids }
 }
 
 func (sn Sensor) Schedule(delay time.Duration) {
-	for {
+	for i:= 0; i < len(sn.ids); i++ {
 		sn.storeRawData()
 		time.Sleep(delay * time.Second)
 	}
@@ -36,7 +36,7 @@ func (sn *Sensor) storeRawData() {
 	fmt.Println("Sending data ", data, " from ", sn.config.SensorName)
 	readingMessage := iota.NewReading(
 		sn.config.SensorName,
-		strconv.Itoa(sn.count),
+		sn.ids[sn.count],
 		strconv.FormatInt(data, 10),
 		)
 
