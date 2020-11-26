@@ -13,7 +13,7 @@ import (
 type Annotation struct {
 	Iss string  `json:"iss" bson:"iss"`
 	Sub string  `json:"sub" bson:"sub"`
-	Iat string  `json:"iat" bson:"iat"`
+	Iat int64   `json:"iat" bson:"iat"`
 	Jti string  `json:"jti" bson:"jti"`
 	Ann string  `json:"ann" bson:"ann"`
 	Avl float64 `json:"avl" bson:"avl"`

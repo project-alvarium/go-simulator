@@ -27,7 +27,7 @@ func (annotator Annotator) StoreAnnotation(sensorId string, readingId string, an
 	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
 	iss, _ := os.Hostname()
-	iat := time.Now().String()
+	iat := time.Now().UnixNano() / int64(time.Millisecond)
 	an := annotation
 	an.Iss = iss
 	an.Sub = sensorId

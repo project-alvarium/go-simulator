@@ -3,12 +3,9 @@ package sensor
 import (
 	"fmt"
 	"github.com/project-alvarium/go-simulator/collections"
-	"github.com/project-alvarium/go-simulator/configuration"
-	"github.com/project-alvarium/go-simulator/libs"
-	"log"
-
 	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
+	"log"
 
 	"math/rand"
 	"strconv"
@@ -18,10 +15,11 @@ import (
 type Sensor struct {
 	subscriber *iota.Subscriber
 	config configfile.ConfigFile
+	count int
 }
 
 func NewSensor(subscriber *iota.Subscriber, cf configfile.ConfigFile) Sensor {
-	return Sensor{ subscriber, cf }
+	return Sensor{ subscriber, cf, 0 }
 }
 
 func (sn Sensor) Schedule(delay time.Duration) {
@@ -31,15 +29,14 @@ func (sn Sensor) Schedule(delay time.Duration) {
 	}
 }
 
-func (sn Sensor) storeRawData() {
+func (sn *Sensor) storeRawData() {
 	data := rand.Int63()
-	rl := libs.RandLib{Charset: configuration.LetterBytes}
-	readingId := rl.StringWithCharset(10)
+	sn.count += 1
 
-	fmt.Println("Sending data ", data, " from ", sn.config.SensorID)
+	fmt.Println("Sending data ", data, " from ", sn.config.SensorName)
 	readingMessage := iota.NewReading(
-		sn.config.SensorID,
-		readingId,
+		sn.config.SensorName,
+		strconv.Itoa(sn.count),
 		strconv.FormatInt(data, 10),
 		)
 

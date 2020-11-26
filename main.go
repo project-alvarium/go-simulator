@@ -16,13 +16,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/project-alvarium/go-simulator/api"
 	"github.com/project-alvarium/go-simulator/configuration"
 	"github.com/project-alvarium/go-simulator/iota"
-	"github.com/project-alvarium/go-simulator/libs"
 	"github.com/project-alvarium/go-simulator/simulator/annotator"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"github.com/project-alvarium/go-simulator/simulator/sensor"
@@ -77,11 +77,13 @@ func main() {
 	newAnnotator := annotator.NewAnnotator(&annSubscriber)
 	go newSensor.Schedule(time.Duration(cf.EmissionFrequency))
 
-	rl := libs.RandLib{Charset: "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-
-	for i := 0; i < len(cf.Annotations); i++ {
-		newAnnotator.StoreAnnotation(cf.SensorID, rl.StringWithCharset(8), cf.Annotations[i])
+	// Pause a second to let sensor data start flowing
+	time.Sleep(2 * time.Second)
+	for i := 1; i < 100; i++ {
+		// Store one of each annotation for each reading
+		newAnnotator.StoreAnnotation(cf.SensorName, strconv.Itoa(i), cf.Annotations[0])
+		newAnnotator.StoreAnnotation(cf.SensorName, strconv.Itoa(i), cf.Annotations[1])
+		time.Sleep(10 * time.Second)
 	}
 
 	//collections.Database()
