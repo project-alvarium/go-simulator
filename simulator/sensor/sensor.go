@@ -2,10 +2,8 @@ package sensor
 
 import (
 	"fmt"
-	"github.com/project-alvarium/go-simulator/collections"
 	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
-	"log"
 	"math/rand"
 	"strconv"
 	"time"
@@ -46,11 +44,11 @@ func (sn *Sensor) storeRawData() {
 	/// plan for that sensor insertion/annotation is going to be. I would propose storing
 	/// them as a key/val mapping of readingId -> data for simplification purposes
 
-
+/*
 	insertResult, err := collections.InsertRawData(data)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Inserted a Single Rawdata: ", insertResult)
+	fmt.Println("Inserted a Single Rawdata: ", insertResult)*/
 
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/libs"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -49,12 +48,12 @@ func (annotator *Annotator) StoreAnnotation(sensorId string, readingId string, a
 
 	annotationMessage := iota.NewAnnotation(readingId, an)
 	annotator.sub.SendMessage(annotationMessage)
-
+/*
 	insertResult, err := collections.InsertAnnotation(an)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Inserted a Single Document: ", insertResult)
+	fmt.Println("Inserted a Single Document: ", insertResult)*/
 }
 
 func (annotator Annotator) RetrieveAnnotation() {
