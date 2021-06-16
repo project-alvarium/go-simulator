@@ -25,7 +25,6 @@ type Subscriber struct {
 func NewSubscriber(nodeConfig configfile.NodeConfig, subConfig configfile.SubConfig) Subscriber {
 	// Generate Transport client
 	transport := C.tsp_client_new_from_url(C.CString(nodeConfig.Url))
-	C.tsp_client_set_mwm(transport, C.uchar(nodeConfig.Mwm))
 
 	// Generate Subscriber instance
 	sub := Subscriber {

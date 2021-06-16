@@ -3,6 +3,7 @@
 coverage.out
 go.sum
 test.txt
+*.so
 
 #binary files
 go-simulator
