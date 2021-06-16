@@ -84,7 +84,7 @@ func setRandomData() ConfigFile {
 	cf.AnnotationOwners = []Owner{Owner{Name: "IOTA", PrivateKey: "IOTAKey"}, {Name: "IBM", PrivateKey: "IBMKey"}, {Name: "Dell", PrivateKey: "DellKey"}}
 	cf.Annotations = []collections.Annotation{{Ann: "policy"}, {Ann: "ownership"}}
 	cf.IOTAStreamID = "s7g37gd"
-	cf.EmissionFrequency = 10
+	cf.EmissionFrequency = 3
 	cf.Created = time.Now()
 	cf.SubConfig = NewSubConfig(configuration.AnnAddress)
 	cf.NodeConfig = NewNodeConfig(configuration.NodeUrl, configuration.NodeMwm)

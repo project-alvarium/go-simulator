@@ -3,14 +3,16 @@ package main
 /*
 #cgo CFLAGS: -I./iota/include -DIOTA_STREAMS_CHANNELS_CLIENT
 //Choose one of the 2 below for compilation. Use .so for linux and .dylib for mac
-//#cgo LDFLAGS: ./iota/include/libiota_streams_c.so
-#cgo LDFLAGS: ./iota/include/libiota_streams_c.dylib
+#cgo LDFLAGS: ./iota/include/libiota_streams_c.so
+//#cgo LDFLAGS: ./iota/include/libiota_streams_c.dylib
+
 #include <channels.h>
 */
 import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/project-alvarium/go-simulator/collections"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -52,6 +54,7 @@ func main() {
 	cf.SetConfigurationFile()
 	cf = parseData()
 
+	collections.Database()
 	// Create a subscriber instance for annotator and await connection
 	sensorSubscriber := iota.NewSubscriber(cf.NodeConfig, cf.SubConfig)
 	sensorSubscriber.AwaitKeyload()

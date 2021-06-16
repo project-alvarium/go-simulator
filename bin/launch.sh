@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Kill all lingering related processes
 function cleanup {
 	pkill go-simulator
