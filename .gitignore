@@ -3,6 +3,9 @@
 coverage.out
 go.sum
 test.txt
+*.so
 
 #binary files
 go-simulator
+./iota/include/libiota_streams_c.dylib
+./iota/include/libiota_streams_c.so
