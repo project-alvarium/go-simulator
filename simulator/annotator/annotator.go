@@ -5,7 +5,6 @@ import (
 	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/libs"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -47,7 +46,7 @@ func (annotator *Annotator) Schedule(delay time.Duration) {
 	}
 }
 func (annotator *Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation) {
-	log.Println("Sending annotation for ", readingId, " from ", sensorId)
+	fmt.Println("Sending annotation for ", readingId, " from ", sensorId)
 
 	rl := libs.RandLib{Charset: configuration.LetterBytes}
 	iss, _ := os.Hostname()
