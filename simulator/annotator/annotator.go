@@ -19,24 +19,36 @@ import (
 type Annotator struct {
 	sub *iota.Subscriber
 	config configfile.ConfigFile
-	count int
-	ids []string
+	readingStore *iota.ReadingStore
 }
 
-func NewAnnotator(sub *iota.Subscriber, config configfile.ConfigFile, ids []string) Annotator {
-	return Annotator{sub, config, 0, ids }
+var annotated []string
+
+func NewAnnotator(sub *iota.Subscriber, config configfile.ConfigFile, readings *iota.ReadingStore) Annotator {
+	fmt.Println("Made a new annotator")
+	return Annotator{sub, config, readings }
 }
 
 func (annotator *Annotator) Schedule(delay time.Duration) {
-	for i := 0; i < len(annotator.ids); i++ {
-		cf := &annotator.config
-		annotator.StoreAnnotation(cf.SensorName, annotator.ids[annotator.count], cf.Annotations[0])
-		annotator.StoreAnnotation(cf.SensorName, annotator.ids[annotator.count], cf.Annotations[1])
-		annotator.count += 1
+	for i := 0; i < 1000; i++ {
+		readingId, sensorId := annotator.readingStore.GetNext()
+
+		if readingId != "" {
+			cf := &annotator.config
+			for y:= 0; y < 4; y++ {
+				if rand.Intn(2) == 1 {
+					annotator.StoreAnnotation(sensorId, readingId, cf.Annotations[y])
+					time.Sleep(3 * time.Second)
+				}
+			}
+			annotator.readingStore.Remove(readingId)
+		}
 		time.Sleep(delay * time.Second)
 	}
 }
 func (annotator *Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation) {
+	log.Println("Sending annotation for ", readingId, " from ", sensorId)
+
 	rl := libs.RandLib{Charset: configuration.LetterBytes}
 	iss, _ := os.Hostname()
 	iat := time.Now().UnixNano() / int64(time.Millisecond)
@@ -45,16 +57,16 @@ func (annotator *Annotator) StoreAnnotation(sensorId string, readingId string, a
 	an.Sub = sensorId
 	an.Iat = iat
 	an.Jti = rl.StringWithCharset(10)
-	an.Avl = rand.Float64()
+	an.Avl = 2
 
 	annotationMessage := iota.NewAnnotation(readingId, an)
 	annotator.sub.SendMessage(annotationMessage)
-
+/*
 	insertResult, err := collections.InsertAnnotation(an)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Inserted a Single Document: ", insertResult)
+	fmt.Println("Inserted a Single Document: ", insertResult)*/
 }
 
 func (annotator Annotator) RetrieveAnnotation() {

@@ -10,11 +10,16 @@
 package api
 
 import (
+	"github.com/project-alvarium/go-simulator/configuration"
+	"github.com/project-alvarium/go-simulator/iota"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
 )
+
+var subStore *iota.SubStore
+var readingStore *iota.ReadingStore
 
 // Route holds info of routes
 type Route struct {
@@ -28,12 +33,21 @@ type Route struct {
 type Routes []Route
 
 // NewRouter creates new router
-func NewRouter() *mux.Router {
+func NewRouter(subs *iota.SubStore, readings *iota.ReadingStore) *mux.Router {
+	subStore = subs
+	readingStore = readings
+
 	router := mux.NewRouter().StrictSlash(true)
+	//router.Use(mux.CORSMethodMiddleware(router))
+	router.Methods("OPTIONS").HandlerFunc(PreFlight)
+	router.HandleFunc("/favicon.ico", HandleFavIcon)
+	router.HandleFunc("/api/sensors", AddSensor)
+	router.HandleFunc("/api/annotators", AddAnnotator)
+
 	for _, route := range routes {
 		var handler http.Handler
 		handler = route.HandlerFunc
-		handler = Logger(handler, route.Name)
+		//handler = Logger(handler, route.Name)
 
 		router.
 			Methods(route.Method).
@@ -60,4 +74,34 @@ var routes = Routes{
 		"/api/insights/{id}",
 		GetInsightByID,
 	},
+/*
+	Route{
+		"AddSensor",
+		strings.ToUpper("Post"),
+		"/api/sensors",
+		AddSensor,
+	},
+
+	Route{
+		"AddAnnotator",
+		strings.ToUpper("Post"),
+		"/api/annotators",
+		AddAnnotator,
+	},*/
+}
+
+func AddSensor(w http.ResponseWriter, r *http.Request) {
+
+	AddNewSensor(w, r, subStore, readingStore)
+
+}
+
+func HandleFavIcon(w http.ResponseWriter, r *http.Request) {}
+
+func SendSubRequest(subscriber iota.Subscriber, data []byte) {
+	subscriber.SendSubscriptionIdToAuthor(configuration.AuthConsoleUrl, data)
+}
+
+func AddAnnotator(w http.ResponseWriter, r *http.Request) {
+	AddNewAnnotator(w, r, subStore, readingStore)
 }

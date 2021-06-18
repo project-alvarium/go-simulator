@@ -1,10 +1,9 @@
 package sensor
 
 import (
-	"fmt"
-	"github.com/project-alvarium/go-simulator/collections"
+	"github.com/project-alvarium/go-simulator/configuration"
 	"github.com/project-alvarium/go-simulator/iota"
-	"github.com/project-alvarium/go-simulator/simulator/configfile"
+	"github.com/project-alvarium/go-simulator/libs"
 	"log"
 	"math/rand"
 	"strconv"
@@ -13,17 +12,16 @@ import (
 
 type Sensor struct {
 	subscriber *iota.Subscriber
-	config configfile.ConfigFile
-	count int
-	ids []string
+	name string
+	readingStore *iota.ReadingStore
 }
 
-func NewSensor(subscriber *iota.Subscriber, cf configfile.ConfigFile, ids []string) Sensor {
-	return Sensor{ subscriber, cf, 0, ids }
+func NewSensor(subscriber *iota.Subscriber, name string, readingStore *iota.ReadingStore) Sensor {
+	return Sensor{ subscriber, name, readingStore }
 }
 
 func (sn Sensor) Schedule(delay time.Duration) {
-	for i:= 0; i < len(sn.ids); i++ {
+	for i:= 0; i < 1000; i++ {
 		sn.storeRawData()
 		time.Sleep(delay * time.Second)
 	}
@@ -31,26 +29,31 @@ func (sn Sensor) Schedule(delay time.Duration) {
 
 func (sn *Sensor) storeRawData() {
 	data := rand.Int63()
-	sn.count += 1
 
-	fmt.Println("Sending data ", data, " from ", sn.config.SensorName)
+	// Prepare reading Id's in advance
+	rl := libs.RandLib{Charset: configuration.LetterBytes}
+	readingId := rl.StringWithCharset(10)
+
+	log.Println("Sending ", readingId, " from ", sn.name)
+
 	readingMessage := iota.NewReading(
-		sn.config.SensorName,
-		sn.ids[sn.count],
+		sn.name,
+		readingId,
 		strconv.FormatInt(data, 10),
 		)
 
+	sn.readingStore.AddReading(readingId, sn.name)
 	sn.subscriber.SendMessage(readingMessage)
 
 	/// **** Note: Does this reading ID approach work for your end? I'm not sure what the
 	/// plan for that sensor insertion/annotation is going to be. I would propose storing
 	/// them as a key/val mapping of readingId -> data for simplification purposes
 
-
+/*
 	insertResult, err := collections.InsertRawData(data)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Inserted a Single Rawdata: ", insertResult)
-
+*/
 }

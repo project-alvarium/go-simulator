@@ -11,8 +11,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/project-alvarium/go-simulator/iota"
+	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/project-alvarium/go-simulator/api/models"
 	"github.com/project-alvarium/go-simulator/handlers"
@@ -20,6 +24,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+
+type ConsoleResponse struct {
+	MsgId string `json:"msgid"`
+	Pk string `json:"pk"`
+}
+
+var cache []string
 // AddInsight adds insight to db and returns response to user
 func AddInsight(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -54,6 +65,128 @@ func GetInsightByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(models.Insight{InsightID: res.InsightID, DataID: res.DataID})
-	w.WriteHeader(http.StatusOK)
 	return
 }
+
+func PreFlight(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "content-type")
+}
+
+func AddNewSensor(w http.ResponseWriter, r *http.Request, subs *iota.SubStore, readings *iota.ReadingStore) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var req models.SensorSubRequest
+	err = json.Unmarshal([]byte(body), &req)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		//w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if isCached(req.Id) {
+		return
+	}
+	cache = append(cache, req.Id)
+
+	nodeConfig := configfile.NewNodeConfig(req.Node)
+	subConfig := configfile.NewSubConfig(req.Address)
+	cf := configfile.ConfigFile{}
+	cf.SetConfigurationFile(req.Id, subConfig, nodeConfig)
+	cf = parseData()
+
+	var tickRate = req.TickRate
+
+	var sub = iota.NewSubscriber(&nodeConfig, &subConfig)
+	sub.AwaitKeyload()
+
+	var sensor = handlers.CreateSensor(&sub, cf, readings)
+	subs.AddSub(&sub)
+	go sensor.Schedule(time.Duration(tickRate))
+
+	err = json.NewEncoder(w).Encode(models.Response{Code: 200, Message: "Sensor Added"})
+
+	return
+}
+
+func isCached(id string) bool {
+	for _, s := range cache {
+		if s == id {
+			return true
+		}
+	}
+	return false
+}
+
+
+func AddNewAnnotator(w http.ResponseWriter, r *http.Request, subs *iota.SubStore, readings *iota.ReadingStore) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var req models.SensorSubRequest
+	err = json.Unmarshal([]byte(body), &req)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if isCached(req.Id) {
+		return
+	}
+	cache = append(cache, req.Id)
+
+	var tickRate = req.TickRate
+
+	nodeConfig := configfile.NewNodeConfig(req.Node)
+	subConfig := configfile.NewSubConfig(req.Address)
+	cf := configfile.ConfigFile{}
+	cf.SetConfigurationFile(req.Id, subConfig, nodeConfig)
+	cf = parseData()
+
+	var sub = iota.NewSubscriber(&nodeConfig, &subConfig)
+	sub.AwaitKeyload()
+
+	var annotator = handlers.CreateAnnotator(&sub, cf, readings)
+	subs.AddSub(&sub)
+	go annotator.Schedule(time.Duration(tickRate))
+
+	json.NewEncoder(w).Encode(models.Response{Code: 200, Message: "Annotator Added"})
+
+	return
+}
+
+func parseData() configfile.ConfigFile {
+	var configuartions = readFromFile("test.txt")
+	var Data configfile.ConfigFile
+	err := json.Unmarshal([]byte(configuartions), &Data)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return Data
+
+}
+
+func readFromFile(filename string) string {
+
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return ""
+	}
+
+	return string(data)
+}
+
