@@ -2,39 +2,47 @@ package annotator
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/project-alvarium/go-simulator/collections"
+	"github.com/project-alvarium/go-simulator/configuration"
 	"github.com/project-alvarium/go-simulator/iota"
 	"github.com/project-alvarium/go-simulator/libs"
 	"github.com/project-alvarium/go-simulator/simulator/configfile"
 	"math/rand"
 	"os"
 	"time"
-
-	"github.com/project-alvarium/go-simulator/collections"
-	"github.com/project-alvarium/go-simulator/configuration"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 type Annotator struct {
 	sub *iota.Subscriber
 	config configfile.ConfigFile
-	count int
-	ids []string
+	readingStore *iota.ReadingStore
 }
 
-func NewAnnotator(sub *iota.Subscriber, config configfile.ConfigFile, ids []string) Annotator {
-	return Annotator{sub, config, 0, ids }
+func NewAnnotator(sub *iota.Subscriber, config configfile.ConfigFile, readings *iota.ReadingStore) Annotator {
+	fmt.Println("Made a new annotator")
+	return Annotator{sub, config, readings }
 }
 
 func (annotator *Annotator) Schedule(delay time.Duration) {
-	for i := 0; i < len(annotator.ids); i++ {
-		cf := &annotator.config
-		annotator.StoreAnnotation(cf.SensorName, annotator.ids[annotator.count], cf.Annotations[0])
-		annotator.StoreAnnotation(cf.SensorName, annotator.ids[annotator.count], cf.Annotations[1])
-		annotator.count += 1
+	for i := 0; i < 1000; i++ {
+		readingId, sensorId := annotator.readingStore.GetNext()
+
+		if readingId != "" {
+			cf := &annotator.config
+			for y:= 0; y < 4; y++ {
+				if rand.Intn(2) == 1 {
+					annotator.StoreAnnotation(sensorId, readingId, cf.Annotations[y])
+					time.Sleep(3 * time.Second)
+				}
+			}
+			annotator.readingStore.Remove(readingId)
+		}
 		time.Sleep(delay * time.Second)
+		fmt.Println("Annotator tick...")
 	}
 }
+
 func (annotator *Annotator) StoreAnnotation(sensorId string, readingId string, annotation collections.Annotation) {
 	rl := libs.RandLib{Charset: configuration.LetterBytes}
 	iss, _ := os.Hostname()
