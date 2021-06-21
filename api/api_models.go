@@ -11,14 +11,39 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"net/http"
-
+	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/project-alvarium/go-simulator/api/models"
 	"github.com/project-alvarium/go-simulator/handlers"
-
-	"github.com/gorilla/mux"
+	"github.com/project-alvarium/go-simulator/iota"
+	"github.com/project-alvarium/go-simulator/simulator/configfile"
+	"io/ioutil"
+	"net/http"
+	"time"
 )
+
+type ConsoleResponse struct {
+	MsgId string `json:"msgid"`
+	Pk string `json:"pk"`
+}
+
+type AnnSubRequest struct {
+	Address string `json:"address"`
+	MWM int8 `json:"mwm"`
+	TickRate int8 `json:"tickRate"`
+	Node string `json:"node"`
+	Id string `json:"id"`
+}
+
+type SensorSubRequest struct {
+	Address string `json:"address"`
+	MWM int8 `json:"mwm"`
+	TickRate int8 `json:"tickRate"`
+	Node string `json:"node"`
+	Id string `json:"id,omitempty"`
+}
+
+var cache []string
 
 // AddInsight adds insight to db and returns response to user
 func AddInsight(w http.ResponseWriter, r *http.Request) {
@@ -56,4 +81,130 @@ func GetInsightByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(models.Insight{InsightID: res.InsightID, DataID: res.DataID})
 	w.WriteHeader(http.StatusOK)
 	return
+}
+
+func PreFlight(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "content-type")
+}
+
+func AddNewSensor(w http.ResponseWriter, r *http.Request, subs *iota.SubStore, readings *iota.ReadingStore) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var req SensorSubRequest
+	err = json.Unmarshal([]byte(body), &req)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		//w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("AddNewSensor handling " + req.Id)
+	if isCached(req.Id) {
+		return
+	}
+	cache = append(cache, req.Id)
+
+	nodeConfig := configfile.NewNodeConfig(req.Node)
+	subConfig := configfile.NewSubConfig(req.Address)
+	cf := configfile.ConfigFile{}
+	cf.SetConfigurationFile(req.Id, subConfig, nodeConfig)
+	cf = parseData(req.Id)
+
+	var tickRate = req.TickRate
+
+	var sub = iota.NewSubscriber(&nodeConfig, &subConfig)
+	sub.AwaitKeyload()
+
+	var sensor = handlers.CreateSensor(&sub, cf, readings)
+	subs.AddSub(&sub)
+	fmt.Println(fmt.Sprintf("Scheduling sensor at interval of %v", tickRate))
+	go sensor.Schedule(time.Duration(tickRate))
+
+	err = json.NewEncoder(w).Encode(models.Response{Code: 200, Message: "Sensor Added"})
+
+	return
+}
+
+func isCached(id string) bool {
+	for _, s := range cache {
+		if s == id {
+			return true
+		}
+	}
+	return false
+}
+
+
+func AddNewAnnotator(w http.ResponseWriter, r *http.Request, subs *iota.SubStore, readings *iota.ReadingStore) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var req SensorSubRequest
+	err = json.Unmarshal([]byte(body), &req)
+	if err != nil {
+		json.NewEncoder(w).Encode(models.Response{Code: 400, Message: err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("AddNewAnnotator handling " + req.Id)
+	if isCached(req.Id) {
+		return
+	}
+	cache = append(cache, req.Id)
+
+	var tickRate = req.TickRate
+
+	nodeConfig := configfile.NewNodeConfig(req.Node)
+	subConfig := configfile.NewSubConfig(req.Address)
+	cf := configfile.ConfigFile{}
+	cf.SetConfigurationFile(req.Id, subConfig, nodeConfig)
+	cf = parseData(req.Id)
+
+	var sub = iota.NewSubscriber(&nodeConfig, &subConfig)
+	sub.AwaitKeyload()
+
+	var annotator = handlers.CreateAnnotator(&sub, cf, readings)
+	subs.AddSub(&sub)
+	fmt.Println(fmt.Sprintf("Scheduling annotator at interval of %v", tickRate))
+	go annotator.Schedule(time.Duration(tickRate))
+
+	json.NewEncoder(w).Encode(models.Response{Code: 200, Message: "Annotator Added"})
+
+	return
+}
+
+func parseData(name string) configfile.ConfigFile {
+	var configurations = readFromFile(fmt.Sprintf("%s-test.txt", name))
+	var Data configfile.ConfigFile
+	err := json.Unmarshal([]byte(configurations), &Data)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return Data
+
+}
+
+func readFromFile(filename string) string {
+
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return ""
+	}
+
+	return string(data)
 }
