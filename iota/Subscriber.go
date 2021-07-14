@@ -32,11 +32,17 @@ type AnnResponse struct {
 
 func NewSubscriber(nodeConfig *configfile.NodeConfig, subConfig *configfile.SubConfig) Subscriber {
 	// Generate Transport client
-	transport := C.tsp_client_new_from_url(C.CString(nodeConfig.Url))
+	transport := C.transport_client_new_from_url(C.CString(nodeConfig.Url))
+
+	var newSub *C.subscriber_t
+	cerr := C.sub_new(&newSub, C.CString(subConfig.Seed), C.CString(subConfig.Encoding), PAYLOAD_LENGTH, transport)
+	if cerr != C.ERR_OK {
+		fmt.Println(errCode(cerr))
+	}
 
 	// Generate Subscriber instance
 	sub := Subscriber {
-		C.sub_new(C.CString(subConfig.Seed), C.CString(subConfig.Encoding), PAYLOAD_LENGTH, transport),
+		newSub,
 		nil,
 		http.DefaultClient,
 	}
@@ -47,8 +53,18 @@ func NewSubscriber(nodeConfig *configfile.NodeConfig, subConfig *configfile.SubC
 	C.sub_receive_announce(sub.Subscriber, address)
 
 	// Fetch sub link and pk for subscription
-	subLink := C.sub_send_subscribe(sub.Subscriber, address)
-	subPk := C.sub_get_public_key(sub.Subscriber)
+	var subLink *C.address_t
+	var subPk *C.public_key_t
+
+	cerr = C.sub_send_subscribe(&subLink, sub.Subscriber, address)
+	if cerr != C.ERR_OK {
+		fmt.Println(errCode(cerr))
+	}
+
+	cerr = C.sub_get_public_key(&subPk, sub.Subscriber)
+	if cerr != C.ERR_OK {
+		fmt.Println(errCode(cerr))
+	}
 
 	subIdStr := C.get_address_id_str(subLink)
 	subPkStr := C.public_key_to_string(subPk)
@@ -76,11 +92,20 @@ func (sub *Subscriber) SendMessage(message TangleMessage) {
 	messageBytes := C.CBytes([]byte(message.message))
 	messageLen := len(message.message)
 
-	C.sub_send_signed_packet(
+	var messageLinks C.message_links_t
+	log.Println("Sending streams message... ")
+	cerr := C.sub_send_signed_packet(
+		&messageLinks,
 		sub.Subscriber,
 		*sub.Keyload,
 		nil, 0,
 		(*C.uchar) (messageBytes), C.size_t(messageLen))
+
+	if cerr != C.ERR_OK {
+		fmt.Println(errCode(cerr))
+	}
+	msgStr := C.get_address_id_str(messageLinks.msg_link)
+	log.Println("Streams message sent ", C.GoString(msgStr))
 }
 
 func (sub *Subscriber) Drop() {
@@ -92,20 +117,26 @@ func (sub *Subscriber) AwaitKeyload() {
 	exists := false
 	for exists == false {
 		// Gen next message ids to look for existing messages
-		msgIds := C.sub_gen_next_msg_ids(sub.Subscriber)
+		var msgIds *C.next_msg_ids_t
+		cerr := C.sub_gen_next_msg_ids(&msgIds, sub.Subscriber)
+		if cerr != C.ERR_OK {
+			fmt.Println(errCode(cerr))
+		}
+
 		// Search for keyload message from these ids and try to process it
-		processed := C.sub_receive_keyload_from_ids(sub.Subscriber, msgIds)
+		var processed C.message_links_t
+		cerr = C.sub_receive_keyload_from_ids(&processed, sub.Subscriber, msgIds)
+		if cerr != C.ERR_OK {
+			fmt.Println("Keyload not found yet... Checking again in 5 seconds...")
+			// Loop until keyload is found and processed
+			time.Sleep(time.Second * 5)
+		} else {
+			// Store keyload links for attaching messages to
+			sub.InsertKeyload(&processed)
+			exists = true
+		}
 		// Free memory for c msgids object
 		C.drop_next_msg_ids(msgIds)
-
-		if processed != nil {
-			// Store keyload links for attaching messages to
-			sub.InsertKeyload(processed)
-			exists = true
-		} else {
-			// Loop until keyload is found and processed
-			time.Sleep(time.Second)
-		}
 	}
 }
 
@@ -146,4 +177,14 @@ func getAnnouncementId(url string) string {
 		fmt.Println(err)
 	}
 	return annResp.AnnId
+}
+
+func errCode(err C.err_t) string {
+	switch err {
+		case C.ERR_OK: return "\nFunction completed Ok"
+		case C.ERR_NULL_ARGUMENT: return "\nSTREAMS ERROR: Null argument passed to function"
+		case C.ERR_BAD_ARGUMENT: return "\nSTREAMS ERROR: Bad argument passed to function"
+		case C.ERR_OPERATION_FAILED: return "\nSTREAMS ERROR: Operation failed to execute properly"
+	}
+	return "\nError code does not match any provided error options"
 }
